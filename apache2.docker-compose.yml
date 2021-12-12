@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+    apache2:
+        container_name: apache2
+        build:
+            context: .
+            dockerfile: docker/apache2/DockerFile
+        volumes:
+            - ./:/var/www
+        ports:
+            - "8080:80"
+            - "443:443"
