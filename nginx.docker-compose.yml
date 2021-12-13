@@ -6,16 +6,31 @@ services:
         image: nginx:latest
         ports:
             - "80:80"
+            - "443:443"
         volumes:
             - ./docker/nginx/hosts:/etc/nginx/conf.d
-            - ./:/var/www
         links:
-            - php
+            - apache2
+        depends_on:
+            -  apache2
 
-    php:
-        container_name: php
+    apache2:
+        container_name: apache2
         build:
             context: .
-            dockerfile: ./docker/nginx/php/DockerFile
+            dockerfile: docker/apache2/DockerFile
         volumes:
             - ./:/var/www
+        environment:
+            XDEBUG_CONFIG: remote_host=host.docker.internal
+            PHP_IDE_CONFIG: serverName=localhost
+
+    percona:
+        container_name: percona
+        image: percona
+        restart: always
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: "root"
+            MYSQL_DATABASE: laravel
