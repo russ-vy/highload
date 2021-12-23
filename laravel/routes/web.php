@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ExampleCacheController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,6 +17,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/example-cache',[ExampleCacheController::class, 'index']);
+Route::get('/example-cache/flush',[ExampleCacheController::class, 'flush']);
 
 Route::get('/dashboard', function () {
     return view('dashboard');
