@@ -1,0 +1,29 @@
+stges:
+  - build
+  - test
+  - up
+build:
+  stage: build
+  script:
+    - echo $ENV | base64 -d > laravel/.env
+    - sudo docker-compose -f prod.docker-compose.yml build
+  only:
+    - main
+  when: manual
+  tags:
+    - node
+test:
+  satge: test
+  script: echo ok
+  when: manual
+  tags:
+    - node
+up:
+  stage: up
+  script:
+    - sudo docker compose -f prod.docker-compose.yml up -d
+  only:
+    - main
+  when: manual
+  tags:
+    - node
