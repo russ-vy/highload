@@ -1,0 +1,62 @@
+FROM ubuntu:20.04 as base
+### Устанавливаем временную зону
+ENV TZ=Europe/Moscow
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+
+### Update repositories
+RUN apt-get update && apt-get upgrade -y
+
+RUN apt-get update && apt-get install -y apache2 apache2-utils curl gnupg wget
+
+RUN apt-get update && apt-get install -y git python3 perl php php-pear nano mc
+RUN apt-get update && \
+    apt-get install -y \
+    php-pdo php-pdo-mysql \
+    php-pdo-pgsql php-pdo-sqlite \
+    php-mbstring php-tokenizer \
+    php-xml php-simplexml php-zip \
+    php-opcache php-iconv php-intl \
+    php-json php-gd php-ctype php-oauth \
+    php-mongodb php-redis \
+    php-apcu php-imagick \
+    php-memcached php-ftp php-imap \
+    php-exif php-sqlite3 php-curl \
+    php-geoip php-memcache \
+    cron systemd supervisor
+RUN apt-get update -y
+
+RUN apt-get install php-dev libmcrypt-dev  npm -y
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+    && apt-get install -y nodejs
+
+RUN pecl install xdebug
+RUN rm -R /etc/apache2/sites-enabled/* /etc/apache2/sites-available/* /var/www/*
+RUN mkdir "/var/log/xdebug"
+RUN chown -R www-data:www-data /var/log/xdebug
+
+RUN pecl channel-update pecl.php.net
+RUN pecl install mcrypt
+
+COPY ./docker/apache2/dev/conf/apache2.conf /etc/apache2/apache2.conf
+COPY ./docker/apache2/dev/conf/php.ini /etc/php/7.2/apache2/php.ini
+COPY ./docker/apache2/dev/conf/php.ini /etc/php/7.2/cli/php.ini
+
+RUN a2enmod rewrite
+RUN a2enmod ssl
+RUN \
+  php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
+  php -r "if (hash_file('sha384', 'composer-setup.php') === '906a84df04cea2aa72f40b5f787e49f22d4c2f19492ac310e8cba5b96ac8b64115ac402c8cd292b8a03482574915d1a8') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" && \
+  php composer-setup.php && php -r "unlink('composer-setup.php');"
+
+RUN mv composer.phar /usr/local/bin/composer
+
+WORKDIR /var/www
+ADD ./docker/apache2/dev/entry.sh /etc/entry.sh
+RUN chown www-data:www-data /etc/entry.sh
+RUN chmod u+x /etc/entry.sh
+ENTRYPOINT ["/bin/bash", "/etc/entry.sh"]
+
+WORKDIR /var/www/laravel
+RUN pecl install redis
+RUN composer require predis/predis

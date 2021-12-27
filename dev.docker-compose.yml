@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+    nginx:
+        container_name: nginx
+        image: nginx:latest
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./docker/nginx/dev/hosts:/etc/nginx/conf.d
+        links:
+            - apache2
+        depends_on:
+            -  apache2
+
+    apache2:
+        container_name: apache2
+        build:
+            context: .
+            dockerfile: docker/apache2/dev/DockerFile
+        volumes:
+            - ./:/var/www
+        environment:
+            XDEBUG_CONFIG: remote_host=host.docker.internal
+            PHP_IDE_CONFIG: serverName=localhost
+
+    percona:
+        container_name: percona
+        image: percona
+        restart: always
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: "root"
+            MYSQL_DATABASE: laravel
+
+    redis:
+        container_name: db-redis
+        build:
+            context: .
+            dockerfile: docker/redis/Dockerfile
+        sysctls:
+            - net.core.somaxconn=1000
+        ports:
+            - 6379:6379
+#        volumes:
+#            - ./docker/redis/data:/var/lib/redis
