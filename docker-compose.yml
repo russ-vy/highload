@@ -5,7 +5,7 @@ services:
         container_name: nginx
         image: nginx:latest
         ports:
-            - "8080:80"
+            - "80:80"
             - "443:443"
         volumes:
             - ./docker/nginx/hosts:/etc/nginx/conf.d
@@ -35,6 +35,15 @@ services:
             MYSQL_ROOT_PASSWORD: "root"
             MYSQL_DATABASE: laravel
 
+    rabbitmq:
+        image: rabbitmq:latest
+        ports:
+            - 5672:5672
+            - 15672:15672
+        volumes:
+            - rabbitmq:/var/lib/rabbitmq
+            - rabbitmq-logs:/var/log/rabbitmq
+
     redis:
         container_name: db-redis
         build:
@@ -46,3 +55,11 @@ services:
             - 6379:6379
 #        volumes:
 #            - ./docker/redis/data:/var/lib/redis
+
+#networks:
+#    network:
+#        driver: bridge
+
+volumes:
+    rabbitmq-logs:
+    rabbitmq:
